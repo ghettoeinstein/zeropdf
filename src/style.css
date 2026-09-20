@@ -635,20 +635,20 @@ p {
   padding: 0;
 }
 .text-edit-hit:hover {
-  border-color: #3668d4;
-  background: rgba(54, 104, 212, 0.08);
+  border-color: #547b22;
+  background: rgba(84, 123, 34, 0.09);
 }
 .text-edit-input {
   position: absolute;
   resize: none;
-  border: 1.5px solid #3668d4;
-  background: #fff;
+  border: 1.5px solid #547b22;
+  background: #fffef2;
   color: #151915;
   font-family: inherit;
   line-height: 1.15;
   padding: 0 1px;
   outline: none;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 2px 8px rgba(84, 123, 34, 0.22);
   z-index: 5;
   overflow: hidden;
   white-space: pre;
