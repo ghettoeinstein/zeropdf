@@ -156,6 +156,35 @@ test("edits existing PDF text in place, discloses the substitution, and exports 
   const pdf = await exported(page);
   expect(pdf.getPageCount()).toBe(2);
 });
+test("an edited text block is immediately selected and can be dragged, and re-covers the click-to-edit hit target", async ({
+  page,
+}) => {
+  await sample(page);
+  const hitTargets = page.locator(".text-edit-hit");
+  const targetCountBefore = await hitTargets.count();
+  await hitTargets.first().click();
+  await page.locator(".text-edit-input").fill("Draggable now");
+  await page.locator(".text-edit-input").press("Enter");
+  // Committing an edit must select the new mark so it can be dragged
+  // immediately, and must stop the original PDF text underneath it from
+  // still being a click-to-edit target (it would otherwise sit on top of
+  // and block the very mark it created).
+  const selected = page.locator(".annotation-layer [data-mark]").filter({
+    has: page.locator("rect[stroke='#547b22']"),
+  });
+  await expect(selected).toHaveCount(1);
+  expect(await hitTargets.count()).toBe(targetCountBefore - 1);
+  const box = (await selected.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2 + 40, box.y + box.height / 2 + 60, {
+    steps: 8,
+  });
+  await page.mouse.up();
+  const movedBox = (await selected.boundingBox())!;
+  expect(movedBox.x).toBeGreaterThan(box.x + 20);
+  expect(movedBox.y).toBeGreaterThan(box.y + 20);
+});
 test("handles rotated crop boxes and rejects invalid PDFs without losing current work", async ({
   page,
 }) => {

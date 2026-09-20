@@ -320,8 +320,9 @@ export default function PageView({
       g = parseInt(bg.slice(3, 5), 16),
       b = parseInt(bg.slice(5, 7), 16);
     const luminance = r * 0.299 + g * 0.587 + b * 0.114;
+    const id = uid();
     onAdd({
-      id: uid(),
+      id,
       type: "text",
       x: block.x - 1,
       y: block.y - 1,
@@ -338,10 +339,19 @@ export default function PageView({
       lineHeight: 1.2,
       patchColor: bg,
     });
+    onSelect(id);
     onNotice?.(
-      "Text visually replaced with a substituted font. The original text may still be recoverable from this file — this isn't secure redaction.",
+      "Text visually replaced with a substituted font. The original text may still be recoverable from this file — this isn't secure redaction. Drag to move, or use the corner handle to resize.",
     );
   };
+  const isEdited = (block: TextBlock) =>
+    page.marks.some(
+      (m) =>
+        m.type === "text" &&
+        m.patchColor &&
+        Math.abs(m.x - (block.x - 1)) < 3 &&
+        Math.abs(m.y - (block.y - 1)) < 3,
+    );
   const [draft, setDraft] = useState<Mark | null>(null);
   const gesture = useRef<{
     start: Point;
@@ -676,7 +686,11 @@ export default function PageView({
         })}
         {tool === "select" &&
           !disabled &&
-          textBlocks.map((block) => {
+          textBlocks
+            .filter(
+              (block) => editing?.block.id === block.id || !isEdited(block),
+            )
+            .map((block) => {
             const style: React.CSSProperties = {
               left: `${(block.x / page.width) * 100}%`,
               top: `${(block.y / page.height) * 100}%`,
