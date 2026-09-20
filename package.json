@@ -1,0 +1,33 @@
+{
+  "name": "zeropdf",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A local-first PDF editor. Your PDF never leaves your device.",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "check": "npm run test && npm run build"
+  },
+  "dependencies": {
+    "@fontsource/caveat": "5.3.0",
+    "lucide-react": "1.47.0",
+    "pdf-lib": "1.17.1",
+    "pdfjs-dist": "6.3.289",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@types/node": "26.6.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "prettier": "3.9.8",
+    "typescript": "7.0.2",
+    "vite": "8.3.0",
+    "vitest": "5.0.1"
+  }
+}
