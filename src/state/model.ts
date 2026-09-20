@@ -68,11 +68,20 @@ export type Page = {
 };
 export type FormValue = string | boolean | string[];
 export type Snapshot = { pages: Page[]; forms: Record<string, FormValue> };
+export type SourceMetadata = {
+  hasAuthor: boolean;
+  hasTitle: boolean;
+  hasSubject: boolean;
+  hasKeywords: boolean;
+  hasCreator: boolean;
+  hasProducer: boolean;
+};
 export type Source = {
   id: string;
   bytes: Uint8Array;
   pdf: PDFDocumentProxy;
   name: string;
+  metadata: SourceMetadata;
 };
 export type History = {
   past: Snapshot[];

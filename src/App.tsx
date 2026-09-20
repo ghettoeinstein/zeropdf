@@ -32,12 +32,15 @@ import {
   Circle,
   MoveUpRight,
   HelpCircle,
+  ListChecks,
   PanelLeftClose,
   PanelLeftOpen,
 } from "lucide-react";
 import PageView, { PdfCanvas } from "./components/PageView";
 import Modal from "./components/Modal";
 import Signature, { readImage } from "./components/Signature";
+import { collectDocumentFacts } from "./guide/facts";
+import { evaluateRules, type Recommendation } from "./guide/rules";
 import {
   demoPdf,
   download,
@@ -101,8 +104,9 @@ export default function App() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [modal, setModal] = useState<
-    "privacy" | "help" | "export" | "signature" | "replace" | null
+    "privacy" | "help" | "export" | "signature" | "replace" | "guide" | null
   >(null);
+  const [guideRecs, setGuideRecs] = useState<Recommendation[] | null>(null);
   const [saveName, setSaveName] = useState("");
   const [flatten, setFlatten] = useState(false);
   const [dragging, setDragging] = useState(false);
@@ -123,6 +127,12 @@ export default function App() {
   const selected = current?.marks.find((m) => m.id === selection);
   const ready = state.pages.length > 0;
   const organized = ready && requiresFlatten(state, sources.current);
+  const openGuide = async () => {
+    setModal("guide");
+    setGuideRecs(null);
+    const facts = await collectDocumentFacts(state, sources.current);
+    setGuideRecs(evaluateRules(facts));
+  };
   const dirty = history.past.length > 0;
   const scale =
     fit && current
@@ -554,6 +564,16 @@ export default function App() {
             <span className="local-dot" />
             <span>LOCAL &middot; 0 B UPLOADED</span>
           </button>
+          {ready && (
+            <button
+              className="icon-button help-button"
+              onClick={openGuide}
+              aria-label="Document check"
+              title="Document check"
+            >
+              <ListChecks size={19} />
+            </button>
+          )}
           <button
             className="icon-button help-button"
             onClick={() => setModal("help")}
@@ -1521,8 +1541,45 @@ export default function App() {
             ))}
           </div>
           <p className="fine-print">
-            Add new text or cover and replace content. Direct editing of
-            existing PDF text and secure redaction are not supported.
+            Click existing text to replace it in place, or add new text and
+            shapes. Edits to existing text are a visual replacement, not a
+            content-stream edit — the covered original may still be
+            recoverable from the file. Secure redaction is not supported.
+          </p>
+        </Modal>
+      )}
+      {modal === "guide" && (
+        <Modal
+          title="Document check"
+          onClose={() => setModal(null)}
+        >
+          {guideRecs === null ? (
+            <p className="muted">Checking the document…</p>
+          ) : guideRecs.length === 0 ? (
+            <>
+              <p className="muted">
+                Looks good from here. Nothing this checker knows how to
+                detect stands out.
+              </p>
+              <p className="fine-print">
+                This isn't a guarantee the document is error-free — only
+                that none of the checks below found anything.
+              </p>
+            </>
+          ) : (
+            <div className="guide-list">
+              {guideRecs.map((r) => (
+                <div key={r.id} className={`guide-item guide-${r.severity}`}>
+                  <div className="guide-title">{r.title}</div>
+                  <div className="guide-reason">{r.reason}</div>
+                </div>
+              ))}
+            </div>
+          )}
+          <p className="fine-print">
+            Deterministic · Local · No AI. These checks read only the facts
+            below — page and field counts, extractable text, rotation,
+            embedded metadata fields — nothing is uploaded or inferred.
           </p>
         </Modal>
       )}

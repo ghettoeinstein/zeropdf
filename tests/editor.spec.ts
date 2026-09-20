@@ -233,6 +233,18 @@ test("handles rotated crop boxes and rejects invalid PDFs without losing current
   await expect(page.getByRole("alert")).toContainText("valid PDF");
   await expect(page.locator(".page-container")).toHaveCount(1);
 });
+test("document check reports only deterministic, observed facts", async ({
+  page,
+}) => {
+  await sample(page);
+  await page.getByRole("button", { name: "Document check" }).click();
+  await expect(page.getByRole("dialog")).toContainText("Document check");
+  await expect(page.getByText(/form fields? (is|are) empty/i)).toBeVisible();
+  await expect(page.getByText("This file carries document metadata")).toBeVisible();
+  await expect(page.getByText("Deterministic · Local · No AI", { exact: false })).toBeVisible();
+  await page.getByRole("button", { name: "Close dialog" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+});
 test("mobile workspace stays within the viewport", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");

@@ -67,7 +67,20 @@ export async function loadPdf(
       "This PDF could not be rendered. Try saving a new copy in your PDF reader.",
     );
   }
-  const source: Source = { id: uid(), bytes, pdf, name: file.name };
+  const source: Source = {
+    id: uid(),
+    bytes,
+    pdf,
+    name: file.name,
+    metadata: {
+      hasAuthor: !!lib.getAuthor(),
+      hasTitle: !!lib.getTitle(),
+      hasSubject: !!lib.getSubject(),
+      hasKeywords: !!lib.getKeywords(),
+      hasCreator: !!lib.getCreator(),
+      hasProducer: !!lib.getProducer(),
+    },
+  };
   try {
     const forms: Record<string, FormValue> = {};
     for (const field of lib.getForm().getFields()) {
