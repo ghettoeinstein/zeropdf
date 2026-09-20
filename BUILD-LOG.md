@@ -1,0 +1,1 @@
+2026-09-20 · ZP-001 · fixed PdfCanvas stale-render race via generation guard in `src/components/PageView.tsx` · verify: `npm run build` clean, 4/5 Playwright specs pass (5th — mobile viewport — fails identically on baseline `main`, pre-existing and unrelated), manual zoom/page-switch stress test in browser shows no blank/torn canvas · next: ZP-002

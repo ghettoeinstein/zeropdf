@@ -567,6 +567,7 @@ export default function App() {
               className="primary download-button"
               disabled={!!busy}
               onClick={() => setModal("export")}
+              aria-label="Download PDF"
             >
               <ArrowDownToLine size={17} />
               <span>Download PDF</span>

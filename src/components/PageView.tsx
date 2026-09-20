@@ -23,6 +23,7 @@ export function PdfCanvas({
 }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const host = useRef<HTMLDivElement>(null);
+  const generation = useRef(0);
   const [visible, setVisible] = useState(false);
   const [error, setError] = useState("");
   useEffect(() => {
@@ -38,6 +39,7 @@ export function PdfCanvas({
     let task: RenderTask | undefined;
     const el = canvas.current;
     if (!visible || !el) return;
+    const myGeneration = ++generation.current;
     const render = async () => {
       try {
         const page = await pdf.getPage(index + 1);
@@ -72,17 +74,15 @@ export function PdfCanvas({
     return () => {
       disposed = true;
       task?.cancel();
-      if (task)
-        void task.promise
-          .catch(() => {})
-          .finally(() => {
-            el.width = 0;
-            el.height = 0;
-          });
-      else {
+      const clear = () => {
+        // A newer render may already own this canvas — never touch its
+        // dimensions once a later generation has started.
+        if (generation.current !== myGeneration) return;
         el.width = 0;
         el.height = 0;
-      }
+      };
+      if (task) void task.promise.catch(() => {}).finally(clear);
+      else clear();
     };
   }, [pdf, index, width, visible]);
   return (
