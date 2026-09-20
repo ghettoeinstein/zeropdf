@@ -3,7 +3,7 @@ import { PDFDocument, StandardFonts, degrees } from "pdf-lib";
 import { readFile } from "node:fs/promises";
 async function sample(page: BrowserPage) {
   await page.goto("/");
-  await page.getByRole("button", { name: /try a practice PDF/i }).click();
+  await page.getByRole("button", { name: /sample document/i }).click();
   await expect(
     page.getByRole("button", { name: "Download PDF", exact: true }),
   ).toBeVisible();
@@ -136,6 +136,25 @@ test("draws, places typed signature and image, and exports", async ({
   const pdf = await exported(page);
   expect(pdf.getPageCount()).toBe(2);
   expect(pdf.getPage(0).node.Resources()?.toString()).toContain("Image");
+});
+test("edits existing PDF text in place, discloses the substitution, and exports the replacement", async ({
+  page,
+}) => {
+  await sample(page);
+  const hitTargets = page.locator(".text-edit-hit");
+  await expect(hitTargets.first()).toBeVisible();
+  await hitTargets.first().click();
+  const input = page.locator(".text-edit-input");
+  await expect(input).toBeVisible();
+  await input.fill("Replaced locally, not on a server.");
+  await input.press("Enter");
+  await expect(page.locator(".text-edit-input")).toHaveCount(0);
+  await expect(
+    page.getByText(/visually replaced.*substituted font/i),
+  ).toBeVisible();
+  await expect(page.getByText("1 edit", { exact: true })).toBeVisible();
+  const pdf = await exported(page);
+  expect(pdf.getPageCount()).toBe(2);
 });
 test("handles rotated crop boxes and rejects invalid PDFs without losing current work", async ({
   page,

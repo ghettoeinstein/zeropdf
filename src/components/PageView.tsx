@@ -9,17 +9,20 @@ import {
   type FormValue,
   type Tool,
 } from "../state/model";
+import { extractTextBlocks, type TextBlock } from "../pdf/textBlocks";
 
 export function PdfCanvas({
   pdf,
   index,
   width,
   thumbnail = false,
+  onCanvasReady,
 }: {
   pdf: PDFDocumentProxy;
   index: number;
   width: number;
   thumbnail?: boolean;
+  onCanvasReady?: (el: HTMLCanvasElement | null) => void;
 }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const host = useRef<HTMLDivElement>(null);
@@ -90,7 +93,13 @@ export function PdfCanvas({
       {error ? (
         <span className="render-error">{error}</span>
       ) : (
-        <canvas ref={canvas} aria-label={`PDF page ${index + 1}`} />
+        <canvas
+          ref={(el) => {
+            canvas.current = el;
+            onCanvasReady?.(el);
+          }}
+          aria-label={`PDF page ${index + 1}`}
+        />
       )}
     </div>
   );
@@ -112,28 +121,40 @@ export function MarkGraphic({ mark }: { mark: Mark }) {
 function MarkContent({ mark: m }: { mark: Mark }) {
   if (m.type === "text")
     return (
-      <foreignObject
-        x={m.x}
-        y={m.y}
-        width={Math.max(m.width, 1)}
-        height={Math.max(m.height, 1)}
-      >
-        <div
-          style={{
-            fontFamily: families[m.font || "Helvetica"],
-            fontSize: m.fontSize || 16,
-            lineHeight: m.lineHeight || 1.3,
-            color: m.color,
-            textAlign: m.align || "left",
-            whiteSpace: "pre-wrap",
-            overflowWrap: "normal",
-            opacity: m.opacity,
-            pointerEvents: "none",
-          }}
+      <>
+        {m.patchColor && (
+          <rect
+            x={m.x}
+            y={m.y}
+            width={Math.max(m.width, 1)}
+            height={Math.max(m.height, 1)}
+            fill={m.patchColor}
+            opacity={m.opacity}
+          />
+        )}
+        <foreignObject
+          x={m.x}
+          y={m.y}
+          width={Math.max(m.width, 1)}
+          height={Math.max(m.height, 1)}
         >
-          {m.text}
-        </div>
-      </foreignObject>
+          <div
+            style={{
+              fontFamily: families[m.font || "Helvetica"],
+              fontSize: m.fontSize || 16,
+              lineHeight: m.lineHeight || 1.3,
+              color: m.color,
+              textAlign: m.align || "left",
+              whiteSpace: "pre-wrap",
+              overflowWrap: "normal",
+              opacity: m.opacity,
+              pointerEvents: "none",
+            }}
+          >
+            {m.text}
+          </div>
+        </foreignObject>
+      </>
     );
   if (m.image)
     return (
@@ -220,6 +241,7 @@ type Props = {
   onForm: (key: string, value: FormValue) => void;
   onActive: () => void;
   onPlaceAsset: (point: Point) => void;
+  onNotice?: (message: string) => void;
   disabled: boolean;
 };
 export default function PageView({
@@ -237,9 +259,89 @@ export default function PageView({
   onForm,
   onActive,
   onPlaceAsset,
+  onNotice,
   disabled,
 }: Props) {
   const svg = useRef<SVGSVGElement>(null);
+  const canvasEl = useRef<HTMLCanvasElement | null>(null);
+  const [textBlocks, setTextBlocks] = useState<TextBlock[]>([]);
+  const [editing, setEditing] = useState<{
+    block: TextBlock;
+    value: string;
+  } | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    setTextBlocks([]);
+    setEditing(null);
+    pdf
+      .getPage(page.index + 1)
+      .then((p) => extractTextBlocks(p))
+      .then((blocks) => {
+        if (!cancelled) setTextBlocks(blocks);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [pdf, page.index, page.sourceId]);
+  const sampleColor = (block: TextBlock) => {
+    const el = canvasEl.current;
+    if (!el || !el.width || !el.height) return "#ffffff";
+    const ctx = el.getContext("2d");
+    if (!ctx) return "#ffffff";
+    const sx = el.width / page.width,
+      sy = el.height / page.height;
+    const px = Math.min(
+      el.width - 1,
+      Math.max(0, Math.round((block.x - 2) * sx)),
+    );
+    const py = Math.min(
+      el.height - 1,
+      Math.max(0, Math.round((block.y + block.height / 2) * sy)),
+    );
+    try {
+      const [r, g, b] = ctx.getImageData(px, py, 1, 1).data;
+      return `#${[r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("")}`;
+    } catch {
+      return "#ffffff";
+    }
+  };
+  const commitEdit = () => {
+    if (!editing) return;
+    const { block, value } = editing;
+    setEditing(null);
+    if (value === block.text) return;
+    const measure = document.createElement("canvas").getContext("2d")!;
+    measure.font = `${block.fontSize}px Arial, sans-serif`;
+    const textWidth = value ? measure.measureText(value).width : 0;
+    const width = Math.max(block.width, textWidth * 1.08, 6);
+    const bg = sampleColor(block);
+    const r = parseInt(bg.slice(1, 3), 16),
+      g = parseInt(bg.slice(3, 5), 16),
+      b = parseInt(bg.slice(5, 7), 16);
+    const luminance = r * 0.299 + g * 0.587 + b * 0.114;
+    onAdd({
+      id: uid(),
+      type: "text",
+      x: block.x - 1,
+      y: block.y - 1,
+      width: width + 2,
+      height: block.height + 2,
+      color: luminance < 130 ? "#ffffff" : "#000000",
+      fill: "none",
+      stroke: 0,
+      opacity: 1,
+      text: value,
+      font: "Helvetica",
+      fontSize: block.fontSize,
+      align: "left",
+      lineHeight: 1.2,
+      patchColor: bg,
+    });
+    onNotice?.(
+      "Text visually replaced with a substituted font. The original text may still be recoverable from this file — this isn't secure redaction.",
+    );
+  };
   const [draft, setDraft] = useState<Mark | null>(null);
   const gesture = useRef<{
     start: Point;
@@ -415,7 +517,14 @@ export default function PageView({
           transform: `translate(-50%, -50%) rotate(${page.rotation}deg)`,
         }}
       >
-        <PdfCanvas pdf={pdf} index={page.index} width={width} />
+        <PdfCanvas
+          pdf={pdf}
+          index={page.index}
+          width={width}
+          onCanvasReady={(el) => {
+            canvasEl.current = el;
+          }}
+        />
         <svg
           ref={svg}
           className={`annotation-layer tool-${tool}`}
@@ -565,6 +674,51 @@ export default function PageView({
             />
           );
         })}
+        {tool === "select" &&
+          !disabled &&
+          textBlocks.map((block) => {
+            const style: React.CSSProperties = {
+              left: `${(block.x / page.width) * 100}%`,
+              top: `${(block.y / page.height) * 100}%`,
+              width: `${(block.width / page.width) * 100}%`,
+              height: `${(block.height / page.height) * 100}%`,
+              fontSize: block.fontSize * scale,
+            };
+            if (editing?.block.id === block.id)
+              return (
+                <textarea
+                  key={block.id}
+                  className="text-edit-input"
+                  style={style}
+                  autoFocus
+                  onFocus={(e) => e.currentTarget.select()}
+                  value={editing.value}
+                  onChange={(e) =>
+                    setEditing({ block, value: e.target.value })
+                  }
+                  onBlur={commitEdit}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      commitEdit();
+                    } else if (e.key === "Escape") {
+                      e.preventDefault();
+                      setEditing(null);
+                    }
+                  }}
+                />
+              );
+            return (
+              <button
+                key={block.id}
+                type="button"
+                className="text-edit-hit"
+                style={style}
+                title="Click to edit this text"
+                onClick={() => setEditing({ block, value: block.text })}
+              />
+            );
+          })}
       </div>
     </div>
   );

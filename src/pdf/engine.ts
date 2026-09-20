@@ -236,6 +236,15 @@ export async function exportPdf(
       const bottom = pdfPoint(spec, { x: m.x, y: m.y + m.height });
       const common = { color: color(m.color), opacity: m.opacity };
       if (m.type === "text") {
+        if (m.patchColor)
+          page.drawRectangle({
+            x: bottom.x,
+            y: bottom.y,
+            width: m.width,
+            height: m.height,
+            color: color(m.patchColor),
+            opacity: m.opacity,
+          });
         const font = fonts[m.font || "Helvetica"];
         const size = m.fontSize || 16;
         const lines = textLines(m, (t) => font.widthOfTextAtSize(t, size));

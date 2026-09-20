@@ -13,7 +13,6 @@ import {
   FileText,
   Highlighter,
   ImagePlus,
-  Layers,
   LockKeyhole,
   Maximize2,
   Minus,
@@ -552,8 +551,8 @@ export default function App() {
         </span>
         <div className="header-right">
           <button className="privacy-pill" onClick={() => setModal("privacy")}>
-            <ShieldCheck size={15} />
-            <span>100% on your device</span>
+            <span className="local-dot" />
+            <span>LOCAL &middot; 0 B UPLOADED</span>
           </button>
           <button
             className="icon-button help-button"
@@ -588,39 +587,31 @@ export default function App() {
         {!ready ? (
           <>
             <section className="welcome">
-              <div className="eyebrow">
-                <span className="tiny-line" />
-                YOUR FILES. YOUR BROWSER. THAT’S IT.
-              </div>
               <h1>
-                Your PDF.
+                Edit a PDF.
                 <br />
-                <span>Your business.</span>
+                Nothing leaves your device.
               </h1>
-              <p className="intro">
-                Sign it. Fill it. Make it yours.
-                <br />A little less paperwork, without the upload.
-              </p>
               <button
                 className="drop-zone"
                 onClick={() => fileInput.current?.click()}
                 disabled={!!busy}
               >
-                <span className="file-symbol">
-                  <FileText size={32} strokeWidth={1.5} />
-                  <span className="plus-badge">
-                    <Plus size={14} />
-                  </span>
-                </span>
-                <span className="drop-title">
-                  Open a PDF <ArrowUpRight size={21} />
-                </span>
-                <span className="drop-description">or drop one right here</span>
-                <span className="file-local">
-                  <LockKeyhole size={12} />
-                  Nothing is uploaded. Ever.
-                </span>
+                <span className="drop-corner drop-corner-tl" />
+                <span className="drop-corner drop-corner-tr" />
+                <span className="drop-corner drop-corner-bl" />
+                <span className="drop-corner drop-corner-br" />
+                <FileText size={28} strokeWidth={1.5} />
+                <span className="drop-title">DROP PDF HERE</span>
+                <span className="drop-description">or choose a file</span>
               </button>
+              <p className="workflow-line">
+                Merge &middot; Fill &middot; Sign &middot; Annotate &middot;
+                Organize
+              </p>
+              <p className="no-server-line">
+                No account. No upload. No server processing.
+              </p>
               <button
                 className="sample-button"
                 disabled={!!busy}
@@ -632,55 +623,9 @@ export default function App() {
                   }
                 }}
               >
-                Just looking? Try a practice PDF <ChevronRight size={15} />
+                sample document <ArrowUpRight size={13} />
               </button>
             </section>
-            <aside className="welcome-side">
-              <div className="side-kicker">
-                A SMALL TOOL.
-                <br />A BIG RELIEF.
-              </div>
-              <div className="capability">
-                <PenLine />
-                <div>
-                  <h3>Sign & fill</h3>
-                  <p>
-                    Finish the form.
-                    <br />
-                    Make your mark.
-                  </p>
-                </div>
-              </div>
-              <div className="capability">
-                <Highlighter />
-                <div>
-                  <h3>Edit & annotate</h3>
-                  <p>
-                    Add text, images, and
-                    <br />a little clarity.
-                  </p>
-                </div>
-              </div>
-              <div className="capability">
-                <Layers />
-                <div>
-                  <h3>Organize & combine</h3>
-                  <p>
-                    The right pages.
-                    <br />
-                    In the right order.
-                  </p>
-                </div>
-              </div>
-              <div className="side-note">
-                <LockKeyhole size={15} />
-                <p>
-                  No account. No cloud.
-                  <br />
-                  No paywall. Just done.
-                </p>
-              </div>
-            </aside>
             <footer className="empty-footer">
               <span>Made for your documents. Built around your privacy.</span>
               <button onClick={() => setModal("privacy")}>
@@ -988,6 +933,7 @@ export default function App() {
                     }
                     onActive={() => setActiveId(p.id)}
                     onPlaceAsset={(point) => placeAsset(point, p.id)}
+                    onNotice={setNotice}
                     disabled={!!busy}
                   />
                 </div>

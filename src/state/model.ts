@@ -31,6 +31,13 @@ export type Mark = {
   rotation?: number;
   points?: Point[];
   image?: string;
+  /**
+   * Solid backing color drawn behind a "text" mark before the text itself —
+   * used by the existing-text edit tool to cover the original PDF text it
+   * replaces. The covered content stream operators are not removed, only
+   * painted over; callers must disclose that to the user.
+   */
+  patchColor?: string;
 };
 export type Widget = {
   id: string;
