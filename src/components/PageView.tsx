@@ -11,6 +11,14 @@ import {
 } from "../state/model";
 import { extractTextBlocks, type TextBlock } from "../pdf/textBlocks";
 
+let measureCtx: CanvasRenderingContext2D | null = null;
+function measureWidth(text: string, fontSize: number) {
+  measureCtx ??= document.createElement("canvas").getContext("2d");
+  if (!measureCtx) return text.length * fontSize * 0.6;
+  measureCtx.font = `${fontSize}px Arial, sans-serif`;
+  return measureCtx.measureText(text || " ").width;
+}
+
 export function PdfCanvas({
   pdf,
   index,
@@ -311,10 +319,12 @@ export default function PageView({
     const { block, value } = editing;
     setEditing(null);
     if (value === block.text) return;
-    const measure = document.createElement("canvas").getContext("2d")!;
-    measure.font = `${block.fontSize}px Arial, sans-serif`;
-    const textWidth = value ? measure.measureText(value).width : 0;
-    const width = Math.max(block.width, textWidth * 1.08, 6);
+    const lines = value.split("\n");
+    const widestLine = Math.max(
+      ...lines.map((l) => measureWidth(l, block.fontSize)),
+    );
+    const width = Math.max(block.width, widestLine * 1.08, 6);
+    const height = block.height * Math.max(1, lines.length) + 2;
     const bg = sampleColor(block);
     const r = parseInt(bg.slice(1, 3), 16),
       g = parseInt(bg.slice(3, 5), 16),
@@ -327,7 +337,7 @@ export default function PageView({
       x: block.x - 1,
       y: block.y - 1,
       width: width + 2,
-      height: block.height + 2,
+      height,
       color: luminance < 130 ? "#ffffff" : "#000000",
       fill: "none",
       stroke: 0,
@@ -698,12 +708,23 @@ export default function PageView({
               height: `${(block.height / page.height) * 100}%`,
               fontSize: block.fontSize * scale,
             };
-            if (editing?.block.id === block.id)
+            if (editing?.block.id === block.id) {
+              const lines = editing.value.split("\n");
+              const widestLine = Math.max(
+                block.width,
+                ...lines.map((l) => measureWidth(l, block.fontSize) * 1.15),
+              );
+              const growStyle: React.CSSProperties = {
+                ...style,
+                left: `${(block.x / page.width) * 100}%`,
+                width: `${(widestLine / page.width) * 100}%`,
+                height: `${((block.height * Math.max(1, lines.length)) / page.height) * 100}%`,
+              };
               return (
                 <textarea
                   key={block.id}
                   className="text-edit-input"
-                  style={style}
+                  style={growStyle}
                   autoFocus
                   onFocus={(e) => e.currentTarget.select()}
                   value={editing.value}
@@ -722,6 +743,7 @@ export default function PageView({
                   }}
                 />
               );
+            }
             return (
               <button
                 key={block.id}

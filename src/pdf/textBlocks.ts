@@ -12,8 +12,14 @@ export type TextBlock = {
   bold: boolean;
 };
 
-const GAP_FACTOR = 0.32;
-const BASELINE_TOLERANCE = 2;
+// Generous on purpose: real headings often use letter-tracking or
+// center-justified word spacing wider than a plain space character, and
+// under-merging (splitting one line into several disconnected edit
+// targets) is a much worse experience than occasionally over-merging.
+// Multi-column layouts (e.g. a row of stat tiles) are still reliably
+// separated by gaps several times larger than this.
+const GAP_FACTOR = 1.1;
+const BASELINE_TOLERANCE = 3;
 
 /**
  * Extracts text runs in the same top-left-origin, unscaled-page-unit space
