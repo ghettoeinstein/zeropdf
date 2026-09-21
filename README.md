@@ -32,7 +32,7 @@ Open the local URL printed by Vite. A built-in practice PDF lets you try the edi
 This is **v0.1**, an initial implementation of the founding PRD, not a certified v1 release.
 
 - **Whiteout is not secure redaction.** It covers content; it does not erase the original information.
-- Existing PDF text is not directly editable. Add new text or cover and replace it.
+- Click existing PDF text to replace it in place. This is a visual replacement (cover + redraw in a substituted font), not a content-stream edit — the covered original may still be recoverable from the exported file. ZeroPDF discloses this at the moment you edit.
 - Encrypted PDFs must first be saved as an unencrypted copy in another trusted PDF reader. We do not bypass encryption.
 - Reordering, merging, duplicating, deleting, inserting, or extracting pages automatically flattens form fields before copying pages. Standard export without page structure changes can retain supported interactive forms.
 - Built-in text fonts support their standard Latin character repertoire. Unsupported text produces an export error while preserving your session. Uploaded text images are an alternative.
