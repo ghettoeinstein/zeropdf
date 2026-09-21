@@ -2,7 +2,7 @@ import type { Page, Snapshot, Source } from "../state/model";
 
 /**
  * Deterministic, locally-observed facts about the open document.
- * Every field here must be computable from data ZeroPDF already has —
+ * Every field here must be computable from data FreePDF already has —
  * no inference, no guessing. See docs/PRD_ZEROGUIDE.md.
  */
 export type DocumentFacts = {

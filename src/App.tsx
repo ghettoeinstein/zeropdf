@@ -540,12 +540,12 @@ export default function App() {
           className="brand"
           href="#"
           onClick={(e) => e.preventDefault()}
-          aria-label="ZeroPDF"
+          aria-label="FreePDF"
         >
           <span className="brand-mark">
-            Z<span>•</span>
+            F<span>•</span>
           </span>
-          Zero<span className="brand-light">PDF</span>
+          Free<span className="brand-light">PDF</span>
         </a>
         <div className="header-divider" />
         <span className="document-name">
@@ -770,11 +770,11 @@ export default function App() {
                       aria-current={current.id === p.id ? "page" : undefined}
                       draggable
                       onDragStart={(e) => {
-                        e.dataTransfer.setData("text/zeropdf-page", p.id);
+                        e.dataTransfer.setData("text/freepdf-page", p.id);
                       }}
                       onDragOver={(e) => e.preventDefault()}
                       onDrop={(e) => {
-                        const id = e.dataTransfer.getData("text/zeropdf-page");
+                        const id = e.dataTransfer.getData("text/freepdf-page");
                         if (id) {
                           e.preventDefault();
                           e.stopPropagation();

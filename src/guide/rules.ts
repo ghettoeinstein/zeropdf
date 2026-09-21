@@ -17,7 +17,7 @@ type Rule = {
 /**
  * Every rule here only states what was actually observed, per
  * docs/PRD_ZEROGUIDE.md §15 (No Hallucination Contract). None of these
- * point at an action button — ZeroPDF doesn't have OCR, metadata removal,
+ * point at an action button — FreePDF doesn't have OCR, metadata removal,
  * or redaction verification yet, so promising one would be exactly the
  * kind of overclaim this system exists to prevent. Add an `action` field
  * to Recommendation and wire it up only once the underlying feature ships.
@@ -33,7 +33,7 @@ const rules: Rule[] = [
           ? "1 page has no extractable text"
           : `${f.pagesWithNoExtractableText.length} pages have no extractable text`,
       reason:
-        "These pages contain no text ZeroPDF can select, search, or edit directly — likely a scanned image. ZeroPDF doesn't run OCR yet, so their content can only be edited visually (cover and redraw), not as real text.",
+        "These pages contain no text FreePDF can select, search, or edit directly — likely a scanned image. FreePDF doesn't run OCR yet, so their content can only be edited visually (cover and redraw), not as real text.",
       priority: 55 + Math.min(f.pagesWithNoExtractableText.length, 20),
     }),
   },
@@ -47,7 +47,7 @@ const rules: Rule[] = [
           ? "1 form field is empty"
           : `${f.emptyFormFieldCount} of ${f.formFieldCount} form fields are empty`,
       reason:
-        "ZeroPDF can't tell which fields are meant to be required — only that they're currently blank.",
+        "FreePDF can't tell which fields are meant to be required — only that they're currently blank.",
       priority: 40 + Math.min(f.emptyFormFieldCount, 20),
     }),
   },
@@ -68,7 +68,7 @@ const rules: Rule[] = [
       return {
         severity: "info",
         title: "This file carries document metadata",
-        reason: `${present.join(", ")} ${present.length === 1 ? "is" : "are"} embedded in the file. ZeroPDF doesn't remove metadata yet — the fields are only being reported, not stripped.`,
+        reason: `${present.join(", ")} ${present.length === 1 ? "is" : "are"} embedded in the file. FreePDF doesn't remove metadata yet — the fields are only being reported, not stripped.`,
         priority: 35,
       };
     },
@@ -89,7 +89,7 @@ const rules: Rule[] = [
     build: () => ({
       severity: "info",
       title: "Pages in this document have different sizes",
-      reason: "Mixed page dimensions are preserved as-is; ZeroPDF doesn't normalize them automatically.",
+      reason: "Mixed page dimensions are preserved as-is; FreePDF doesn't normalize them automatically.",
       priority: 15,
     }),
   },
