@@ -391,7 +391,7 @@ export async function demoPdf() {
     font: bold,
     color: ink,
   });
-  p.drawText("YOUR ZEROPDF PRACTICE DOCUMENT", {
+  p.drawText("YOUR FREEPDF PRACTICE DOCUMENT", {
     x: 58,
     y: 746,
     size: 10,
